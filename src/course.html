@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cyber AI Academy - Course Catalog</title>
+  <style>
+    /* Reset & Base */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      overflow-x: hidden;
+      position: relative;
+    }
+    a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* Neon Glow */
+    .neon {
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px #ff0080,
+        0 0 30px #ff0080,
+        0 0 40px #ff0080,
+        0 0 55px #ff0080,
+        0 0 75px #ff0080;
+    }
+
+    /* Header */
+    header {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 20px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 999;
+      border-bottom: 1px solid #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ff0080;
+    }
+    header ul {
+      display: flex;
+      list-style: none;
+      align-items: center;
+    }
+    header ul li {
+      margin-left: 20px;
+    }
+    header ul li a {
+      transition: color 0.3s;
+    }
+    header ul li a:hover {
+      color: #00eaff;
+    }
+    .logout-btn {
+      background: #ff0080;
+      border: none;
+      padding: 10px 15px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: 0.3s;
+    }
+    .logout-btn:hover {
+      background: #e0006e;
+    }
+
+    /* Course Catalog Grid */
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 80px auto;
+      position: relative;
+      padding: 0 20px 60px;
+    }
+    .course-item {
+      background: #1a1a1a;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 20px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .course-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px #ff0080;
+    }
+    .course-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #ff0080;
+    }
+    .course-desc {
+      font-size: 1rem;
+      margin-bottom: 15px;
+    }
+    .course-meta {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      color: #ccc;
+    }
+    .course-action a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #00eaff;
+      border-radius: 5px;
+      color: #000;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .course-action a:hover {
+      background: #00c7d1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo neon">Cyber AI Academy</div>
+    <ul>
+      <li><a href="profile.html">Profile</a></li>
+      <button onclick="logoutUser()" class="logout-btn">Logout</button>
+    </ul>
+  </header>
+
+  <!-- Course Catalog -->
+  <div class="catalog-grid" id="coursesContainer">
+    <!-- Courses will be loaded here dynamically from Supabase -->
+  </div>
+  <script type="module">
+    import { supabase } from "../supabase.js";
+  
+    async function checkAuth() {
+      const user = JSON.parse(localStorage.getItem("user"));
+  
+      if (!user) {
+        alert("You must be logged in to view courses!");
+        window.location.href = "login.html";
+      }
+    }
+  
+    async function fetchCourses() {
+      const { data: courses, error } = await supabase.from("courses").select("*");
+  
+      if (error) {
+        console.error("Error fetching courses:", error.message);
+        return;
+      }
+  
+      const coursesContainer = document.getElementById("coursesContainer");
+      coursesContainer.innerHTML = "";
+  
+      courses.forEach(course => {
+        const courseItem = document.createElement("div");
+        courseItem.classList.add("course-item");
+        courseItem.innerHTML = `
+          <div class="course-title">${course.title}</div>
+          <div class="course-desc">${course.description}</div>
+          <div class="course-meta">Duration: ${course.duration} weeks | Level: ${course.level}</div>
+          <div class="course-action">
+            <a href="play.html?course=${course.id}">View Details</a>
+          </div>
+        `;
+        coursesContainer.appendChild(courseItem);
+      });
+    }
+  
+    // Attach logoutUser to window so it can be accessed globally
+    window.logoutUser = async function () {
+      await supabase.auth.signOut();
+      localStorage.removeItem("user");
+      alert("Logged out successfully!");
+      window.location.href = "login.html";
+    };
+  
+    checkAuth();
+    fetchCourses();
+  </script>
+  
+
+</body>
+</html>

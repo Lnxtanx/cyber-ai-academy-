@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Cyber AI Academy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background: #0d0d0d; color: #fff; }
+    .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #1a1a1a; border-radius: 10px; text-align: center; }
+    h1 { color: #ff0080; }
+    .profile-info { margin-bottom: 20px; }
+    .motivation-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #222;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-style: italic;
+      color: #00eaff;
+    }
+    .logout-btn { margin-top: 20px; padding: 10px 20px; background: #ff0080; color: #fff; border: none; cursor: pointer; border-radius: 5px; }
+    .logout-btn:hover { background: #e0006e; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>User Profile</h1>
+    <div class="profile-info">
+      <p><strong>Username:</strong> <span id="username">Loading...</span></p>
+      <p><strong>Email:</strong> <span id="email">Loading...</span></p>
+    </div>
+
+    <h2>Motivational Thought</h2>
+    <div class="motivation-box" id="motivation">
+      Loading a powerful quote...
+    </div>
+
+    <button class="logout-btn" onclick="logoutUser()">Logout</button>
+  </div>
+
+  <script type="module">
+    import { supabase } from "../supabase.js";
+
+    async function fetchUserProfile() {
+      // Get logged-in user
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("You must be logged in!");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Fetch user data from "users" table
+      const { data, error } = await supabase
+        .from("users")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .single();
+
+      if (error || !data) {
+        document.getElementById("username").innerText = "Error fetching user";
+        return;
+      }
+
+      document.getElementById("username").innerText = data.full_name;
+      document.getElementById("email").innerText = data.email;
+    }
+
+    function displayRandomQuote() {
+      const quotes = [
+        "Success is not final, failure is not fatal: it is the courage to continue that counts. – Winston Churchill",
+        "The future belongs to those who believe in the beauty of their dreams. – Eleanor Roosevelt",
+        "Don't watch the clock; do what it does. Keep going. – Sam Levenson",
+        "Believe you can and you're halfway there. – Theodore Roosevelt",
+        "Your time is limited, so don’t waste it living someone else’s life. – Steve Jobs",
+        "The only way to do great work is to love what you do. – Steve Jobs",
+        "Difficulties in life are intended to make us better, not bitter. – Dan Reeves",
+        "You don’t have to be great to start, but you have to start to be great. – Zig Ziglar"
+      ];
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      document.getElementById("motivation").innerText = quotes[randomIndex];
+    }
+
+    // Attach logout function to window so it is accessible globally
+    window.logoutUser = async function () {
+      await supabase.auth.signOut();
+      localStorage.removeItem("user");
+      alert("Logged out successfully!");
+      window.location.href = "login.html";
+    };
+
+    fetchUserProfile();
+    displayRandomQuote();
+  </script>
+
+</body>
+</html>

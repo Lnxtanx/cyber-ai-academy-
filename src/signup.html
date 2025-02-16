@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber AI Academy - Sign Up</title>
+  <style>
+    /* Reset & Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'Roboto', sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    a {
+      color: #ff0080;
+      text-decoration: none;
+    }
+
+    /* Header - Small */
+    header {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 20px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 50px;
+      z-index: 999;
+      border-bottom: 1px solid #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #ff0080;
+    }
+
+    /* Falling Stars Background */
+    .falling-stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -999;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      top: -20px;
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(white, rgba(255, 255, 255, 0));
+      animation: fall linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translateY(120vh);
+        opacity: 0;
+      }
+    }
+
+    /* Signup Container */
+    .signup-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .signup-box {
+      background: rgba(20, 20, 20, 0.9);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      width: 350px;
+      box-shadow: 0 0 15px #ff0080;
+    }
+
+    .signup-box h2 {
+      color: #ff0080;
+      margin-bottom: 20px;
+    }
+
+    /* Input Fields */
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #444;
+      background: #1a1a1a;
+      color: #fff;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    .input-field:focus {
+      border-color: #ff0080;
+      outline: none;
+      box-shadow: 0 0 10px #ff0080;
+    }
+
+    /* Signup Button */
+    .signup-btn {
+      width: 100%;
+      padding: 12px;
+      background: #ff0080;
+      border: none;
+      color: #fff;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .signup-btn:hover {
+      background: #e0006e;
+      box-shadow: 0 0 10px #ff0080;
+    }
+
+    /* Login Link */
+    .login-link {
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Falling Stars -->
+  <div class="falling-stars">
+    <script>
+      const starCount = 80;
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        star.style.left = Math.random() * 100 + '%';
+        const duration = (2 + Math.random() * 2).toFixed(2);
+        star.style.animationDuration = duration + 's';
+        const delay = (Math.random() * 2).toFixed(2);
+        star.style.animationDelay = delay + 's';
+        document.querySelector('.falling-stars').appendChild(star);
+      }
+    </script>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">Cyber AI Academy</div>
+  </header>
+
+  <!-- Signup Section -->
+  <div class="signup-container">
+    <div class="signup-box">
+      <h2>Sign Up</h2>
+      <form id="signupForm">
+        <input type="text" id="name" class="input-field" placeholder="Full Name" required />
+        <input type="email" id="email" class="input-field" placeholder="Email" required />
+        <input type="password" id="password" class="input-field" placeholder="Password" required />
+        <input type="password" id="confirm-password" class="input-field" placeholder="Confirm Password" required />
+        <button type="submit" class="signup-btn">Sign Up</button>
+      </form>
+      <p class="login-link">Already have an account? <a href="login.html">Login</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "../supabase.js"; // Correct path from "src" to root
+
+
+    document.getElementById("signupForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const fullName = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      // Supabase signup request with email verification
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        alert("Signup failed: " + error.message);
+        return;
+      }
+
+      // Notify the user about email verification
+      alert("Signup successful! Please check your email for a confirmation link to verify your account.");
+
+      // Store additional user data in the 'users' table
+      await supabase.from("users").insert([
+        {
+          id: data.user.id,
+          full_name: fullName,
+          email: email
+        }
+      ]);
+
+      // Redirect to login page
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 3000); // Delay for better user experience
+    });
+  </script>
+
+
+</body>
+
+</html>

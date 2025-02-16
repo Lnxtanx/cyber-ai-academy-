@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cyber AI Academy - Course Player</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background: #0d0d0d; color: #fff; overflow-x: hidden; }
+    a { color: #fff; text-decoration: none; }
+
+    /* Header */
+    header {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 5px 20px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 50px;
+      z-index: 999;
+      border-bottom: 1px solid #222;
+    }
+    header nav {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+    }
+    header .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #ff0080;
+    }
+
+    /* Main Layout */
+    .player-container {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 50px;
+      min-height: calc(100vh - 50px);
+    }
+
+    /* Notes Section */
+    .notes-section {
+      flex: 1;
+      background: #1a1a1a;
+      border-right: 1px solid #222;
+      padding: 20px;
+      max-width: 600px;
+      max-height: calc(100vh - 50px);
+      overflow-y: auto;
+    }
+    .notes-section h2 { font-size: 1.8rem; color: #ff0080; margin-bottom: 10px; }
+    .notes-section p { margin-bottom: 15px; line-height: 1.5; }
+
+    /* Video Section */
+    .video-section {
+      flex: 2;
+      background: #111;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: sticky;
+      top: 50px;
+    }
+    .video-wrapper {
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="logo">Cyber AI Academy</div>
+      <ul>
+        <li><a href="course.html">Back to Courses</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <div class="player-container">
+    <!-- Notes Section -->
+    <div class="notes-section">
+      <h2 id="courseTitle">Loading...</h2>
+      <p id="courseNotes">Please wait while we fetch course details.</p>
+    </div>
+
+    <!-- Video Section -->
+    <div class="video-section">
+      <div class="video-wrapper">
+        <iframe id="courseVideo" src="" title="Course Video" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fetch Course Content from Supabase -->
+  <script type="module">
+    import { supabase } from "../supabase.js";
+
+    async function fetchCourseContent() {
+      // Get course ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const courseId = urlParams.get("course");
+
+      if (!courseId) {
+        document.getElementById("courseTitle").innerText = "Error: No course selected.";
+        return;
+      }
+
+      // Fetch course notes and video from Supabase
+      const { data, error } = await supabase
+        .from("course_content")
+        .select("*")
+        .eq("course_id", courseId)
+        .single();
+
+      if (error || !data) {
+        document.getElementById("courseTitle").innerText = "Error loading course.";
+        document.getElementById("courseNotes").innerText = "Unable to fetch course content.";
+        return;
+      }
+
+      // Update UI with fetched data
+      document.getElementById("courseTitle").innerText = data.title;
+      document.getElementById("courseNotes").innerText = data.notes;
+      document.getElementById("courseVideo").src = data.video_url;
+    }
+
+    fetchCourseContent();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber AI Academy</title>
+  <!-- Optionally include Roboto from Google Fonts -->
+  <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&display=swap" /> -->
+  <style>
+    /* Reset & Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      /* Ensure body spans at least full viewport height */
+      height: 100%;
+    }
+    body {
+      font-family: 'Roboto', sans-serif; /* Normal, readable font */
+      background: #0d0d0d;
+      color: #fff;
+      overflow-x: hidden;
+      position: relative;
+    }
+    a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* Neon Glow for selected elements */
+    .neon {
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px #ff0080,
+        0 0 30px #ff0080,
+        0 0 40px #ff0080,
+        0 0 55px #ff0080,
+        0 0 75px #ff0080;
+    }
+
+    /* Header */
+    header {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      position: fixed;
+      width: 100%;
+      z-index: 999; /* Stays on top of stars */
+      border-bottom: 1px solid #222;
+    }
+    header nav {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #ff0080;
+    }
+    header ul {
+      display: flex;
+      list-style: none;
+    }
+    header ul li {
+      margin-left: 20px;
+    }
+    header ul li a {
+      transition: color 0.3s;
+    }
+    header ul li a:hover {
+      color: #00eaff;
+    }
+
+    /* Falling Stars Background - covers the entire viewport */
+    .falling-stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -999; /* Behind everything */
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      top: -20px; /* Start just above the viewport */
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(white, rgba(255,255,255,0));
+      animation: fall linear infinite;
+      opacity: 0.8;
+    }
+    @keyframes fall {
+      0% {
+        transform: translateY(0);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(120vh); /* Falls past the bottom of viewport */
+        opacity: 0;
+      }
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 100vh; /* Full viewport height */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+      position: relative;
+      overflow: hidden;
+      z-index: 1; /* Above stars */
+    }
+    /* Background image with pan animation */
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('https://source.unsplash.com/1600x900/?cyberpunk,ai') no-repeat center center/cover;
+      opacity: 0.3;
+      z-index: -2;
+      animation: bgPan 20s infinite alternate;
+    }
+    @keyframes bgPan {
+      0% {
+        transform: scale(1) translate(0, 0);
+      }
+      100% {
+        transform: scale(1.1) translate(-20px, -20px);
+      }
+    }
+    /* Scanline overlay effect */
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+         0deg,
+         transparent,
+         transparent 3px,
+         rgba(0,0,0,0.15) 4px
+      );
+      pointer-events: none;
+      z-index: -1;
+      animation: scanlines 3s linear infinite;
+    }
+    @keyframes scanlines {
+      from {
+        background-position: 0 0;
+      }
+      to {
+        background-position: 0 100%;
+      }
+    }
+    .hero-content {
+      max-width: 800px;
+      animation: fadeIn 1.5s ease-in-out;
+      z-index: 2;
+      position: relative;
+    }
+    .hero-content h1 {
+      margin-bottom: 20px;
+      font-size: 3rem;
+    }
+    .hero-content p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+    .hero-content .btn {
+      background: rgba(255, 0, 128, 0.8);
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.3s, transform 0.3s;
+      animation: pulse 3s infinite;
+    }
+    .hero-content .btn:hover {
+      background: #ff0080;
+      transform: scale(1.05);
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.03);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* Courses Section */
+    .courses {
+      padding: 80px 20px;
+      background: #111;
+      text-align: center;
+      position: relative;
+      z-index: 1; /* Above stars */
+    }
+    .courses h2 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      color: #00eaff;
+    }
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .course-card {
+      background: #1a1a1a;
+      padding: 20px;
+      border: 1px solid #222;
+      border-radius: 10px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .course-card:hover {
+      transform: translateY(-10px) rotate(0.5deg);
+      box-shadow: 0 0 20px #ff0080;
+    }
+    .course-card h3 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: #ff0080;
+    }
+    .course-card p {
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+    .course-card a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #00eaff;
+      border-radius: 5px;
+      color: #000;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .course-card a:hover {
+      background: #00c7d1;
+    }
+
+    /* About Section */
+    .about {
+      padding: 80px 20px;
+      background: #0d0d0d;
+      text-align: center;
+      position: relative;
+      z-index: 1; /* Above stars */
+    }
+    .about h2 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      color: #ff0080;
+    }
+    .about p {
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: auto;
+      line-height: 1.6;
+    }
+
+    /* Contact Section */
+    .contact {
+      padding: 60px 20px;
+      text-align: center;
+      background: #111;
+      position: relative;
+      z-index: 1; /* Above stars */
+    }
+    .contact h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #00eaff;
+    }
+    .contact p {
+      font-size: 1.1rem;
+    }
+    .contact a {
+      color: #ff0080;
+    }
+
+    /* Footer */
+    footer {
+      background: #000;
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 1; /* Above stars */
+    }
+    footer p {
+      color: #555;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-content h1 {
+        font-size: 2.5rem;
+      }
+      .hero-content p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Falling Stars Container -->
+  <div class="falling-stars">
+    <script>
+      // Increase starCount for more density
+      const starCount = 80;
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        // Random horizontal position: 0% to 100%
+        star.style.left = Math.random() * 100 + '%';
+        // Random animation duration: 2s to 4s
+        const duration = (2 + Math.random() * 2).toFixed(2);
+        star.style.animationDuration = duration + 's';
+        // Random animation delay: 0s to 2s
+        const delay = (Math.random() * 2).toFixed(2);
+        star.style.animationDelay = delay + 's';
+        document.querySelector('.falling-stars').appendChild(star);
+      }
+    </script>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="logo neon">Cyber AI Academy</div>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#courses">Courses</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Welcome to the Future</h1>
+      <p>Embark on an advanced journey in AI, Machine Learning, Deep Learning, and Cyber Technologies.</p>
+      <a href="src/login.html" class="btn">Explore Courses</a>
+    </div>
+  </section>
+
+  <!-- Courses Section -->
+  <section class="courses" id="courses">
+    <h2>Our Futuristic Courses</h2>
+    <div class="course-grid">
+      <div class="course-card">
+        <h3>AI Fundamentals</h3>
+        <p>Dive into the basics of Artificial Intelligence and discover its transformative power.</p>
+        <a href="#">Learn More</a>
+      </div>
+      <div class="course-card">
+        <h3>Deep Learning & Neural Networks</h3>
+        <p>Explore advanced architectures and build cutting-edge models using deep learning.</p>
+        <a href="#">Learn More</a>
+      </div>
+      <div class="course-card">
+        <h3>Machine Learning Mastery</h3>
+        <p>Master algorithms and real-world applications with hands-on projects and expert guidance.</p>
+        <a href="#">Learn More</a>
+      </div>
+      <div class="course-card">
+        <h3>NLP & Cyber Technologies</h3>
+        <p>Understand Natural Language Processing combined with cyber-tech innovations for futuristic applications.</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <h2>About Cyber AI Academy</h2>
+    <p>
+      At Cyber AI Academy, we blend cutting-edge technology with a futuristic aesthetic to create an immersive learning environment in AI, Machine Learning, and Cyber Technologies. Join us and redefine your future in the digital era.
+    </p>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact" id="contact">
+    <h2 class="neon">Get in Touch</h2>
+    <p>Have questions? Reach out at <a href="mailto:lnxxisinteger@gmail.com">lnxxisinteger@gmail.com</a></p>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 Cyber AI Academy. All rights reserved.</p>
+  </footer>
+</body>
+</html>
