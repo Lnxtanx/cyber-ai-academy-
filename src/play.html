@@ -5,9 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cyber AI Academy - Course Player</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Roboto', sans-serif; background: #0d0d0d; color: #fff; overflow-x: hidden; }
-    a { color: #fff; text-decoration: none; }
+    /* Reset & Base */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    a {
+      color: #fff;
+      text-decoration: none;
+    }
 
     /* Header */
     header {
@@ -33,6 +46,14 @@
       font-weight: bold;
       color: #ff0080;
     }
+    header ul {
+      display: flex;
+      list-style: none;
+      align-items: center;
+    }
+    header ul li {
+      margin-left: 20px;
+    }
 
     /* Main Layout */
     .player-container {
@@ -52,8 +73,44 @@
       max-height: calc(100vh - 50px);
       overflow-y: auto;
     }
-    .notes-section h2 { font-size: 1.8rem; color: #ff0080; margin-bottom: 10px; }
-    .notes-section p { margin-bottom: 15px; line-height: 1.5; }
+    /* Headings in notes */
+    .notes-section h1,
+    .notes-section h2,
+    .notes-section h3,
+    .notes-section h4,
+    .notes-section h5,
+    .notes-section h6 {
+      color: #ff0080;
+      margin: 16px 0 8px;
+    }
+    /* Paragraphs & Lists */
+    .notes-section p,
+    .notes-section ul,
+    .notes-section ol {
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+    .notes-section li {
+      margin-left: 20px;
+      margin-bottom: 8px;
+    }
+    /* Code Blocks */
+    .notes-section pre {
+      background: #2b2b2b;
+      color: #e2e2e2;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      overflow-x: auto;
+      line-height: 1.4;
+    }
+    .notes-section code {
+      background: #2b2b2b;
+      color: #e2e2e2;
+      padding: 3px 5px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
 
     /* Video Section */
     .video-section {
@@ -100,7 +157,7 @@
     <!-- Notes Section -->
     <div class="notes-section">
       <h2 id="courseTitle">Loading...</h2>
-      <p id="courseNotes">Please wait while we fetch course details.</p>
+      <div id="courseNotes">Please wait while we fetch course details.</div>
     </div>
 
     <!-- Video Section -->
@@ -114,6 +171,26 @@
   <!-- Fetch Course Content from Supabase -->
   <script type="module">
     import { supabase } from "../supabase.js";
+
+    // Helper: Convert YouTube watch URL to embed URL
+    function fixYouTubeUrl(url) {
+      // If it includes watch?v=, convert to embed
+      if (url.includes("youtube.com/watch?v=")) {
+        let videoId = url.split("watch?v=")[1];
+        // Remove extra params after & if present
+        if (videoId.includes("&")) {
+          videoId = videoId.split("&")[0];
+        }
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      // If it's a youtu.be short link
+      if (url.includes("youtu.be/")) {
+        const videoId = url.split("youtu.be/")[1];
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      // Otherwise return original URL
+      return url;
+    }
 
     async function fetchCourseContent() {
       // Get course ID from URL
@@ -140,12 +217,16 @@
 
       // Update UI with fetched data
       document.getElementById("courseTitle").innerText = data.title;
-      document.getElementById("courseNotes").innerText = data.notes;
-      document.getElementById("courseVideo").src = data.video_url;
+
+      // Use innerHTML to preserve headings, code blocks, etc.
+      // Ensure you store HTML content in 'data.notes' or parse Markdown to HTML.
+      document.getElementById("courseNotes").innerHTML = data.notes;
+
+      // Fix YouTube URL if needed, then set iframe src
+      document.getElementById("courseVideo").src = fixYouTubeUrl(data.video_url);
     }
 
     fetchCourseContent();
   </script>
-
 </body>
 </html>
