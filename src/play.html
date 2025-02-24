@@ -172,28 +172,29 @@
   <script type="module">
     import { supabase } from "../supabase.js";
 
-    // Helper: Convert YouTube watch URL to embed URL
     function fixYouTubeUrl(url) {
-      // If it includes watch?v=, convert to embed
       if (url.includes("youtube.com/watch?v=")) {
-        let videoId = url.split("watch?v=")[1];
-        // Remove extra params after & if present
-        if (videoId.includes("&")) {
-          videoId = videoId.split("&")[0];
-        }
+        let videoId = url.split("watch?v=")[1].split("&")[0];
         return `https://www.youtube.com/embed/${videoId}`;
       }
-      // If it's a youtu.be short link
       if (url.includes("youtu.be/")) {
         const videoId = url.split("youtu.be/")[1];
         return `https://www.youtube.com/embed/${videoId}`;
       }
-      // Otherwise return original URL
       return url;
     }
 
+    async function fetchLinkedInArticle(articleUrl) {
+      if (!articleUrl) {
+        return `<p>No LinkedIn article available for this course.</p>`;
+      }
+      return `
+        <p><strong>Read More:</strong> <a href="${articleUrl}" target="_blank">${articleUrl}</a></p>
+        <iframe class="article-embed" src="${articleUrl}" loading="lazy"></iframe>
+      `;
+    }
+
     async function fetchCourseContent() {
-      // Get course ID from URL
       const urlParams = new URLSearchParams(window.location.search);
       const courseId = urlParams.get("course");
 
@@ -202,7 +203,6 @@
         return;
       }
 
-      // Fetch course notes and video from Supabase
       const { data, error } = await supabase
         .from("course_content")
         .select("*")
@@ -212,17 +212,13 @@
       if (error || !data) {
         document.getElementById("courseTitle").innerText = "Error loading course.";
         document.getElementById("courseNotes").innerText = "Unable to fetch course content.";
+        document.getElementById("articleContainer").innerHTML = `<p>Error fetching article.</p>`;
         return;
       }
 
-      // Update UI with fetched data
       document.getElementById("courseTitle").innerText = data.title;
-
-      // Use innerHTML to preserve headings, code blocks, etc.
-      // Ensure you store HTML content in 'data.notes' or parse Markdown to HTML.
-      document.getElementById("courseNotes").innerHTML = data.notes;
-
-      // Fix YouTube URL if needed, then set iframe src
+      document.getElementById("courseNotes").innerHTML = `<div>${data.notes}</div>`;
+      document.getElementById("articleContainer").innerHTML = await fetchLinkedInArticle(data.article_link);
       document.getElementById("courseVideo").src = fixYouTubeUrl(data.video_url);
     }
 
