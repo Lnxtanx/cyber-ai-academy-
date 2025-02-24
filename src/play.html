@@ -169,60 +169,86 @@
   </div>
 
   <!-- Fetch Course Content from Supabase -->
-  <script type="module">
-    import { supabase } from "../supabase.js";
+   <script type="module">
+  import { supabase } from "../supabase.js";
 
-    function fixYouTubeUrl(url) {
-      if (url.includes("youtube.com/watch?v=")) {
-        let videoId = url.split("watch?v=")[1].split("&")[0];
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-      if (url.includes("youtu.be/")) {
-        const videoId = url.split("youtu.be/")[1];
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-      return url;
+// Convert YouTube link to embed format
+function fixYouTubeUrl(url) {
+  if (!url) return null;
+  if (url.includes("youtube.com/watch?v=")) {
+    let videoId = url.split("watch?v=")[1].split("&")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  if (url.includes("youtu.be/")) {
+    const videoId = url.split("youtu.be/")[1];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  return url;
+}
+
+// Fetch LinkedIn Article
+async function fetchLinkedInArticle(articleUrl) {
+  if (!articleUrl) {
+    return `<p>No LinkedIn article available for this course.</p>`;
+  }
+  return `
+    <p><strong>Read Full Article:</strong> <a href="${articleUrl}" target="_blank">${articleUrl}</a></p>
+    <iframe class="article-embed" src="${articleUrl}" loading="lazy"></iframe>
+  `;
+}
+
+// Fetch Course Content
+async function fetchCourseContent() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const courseId = urlParams.get("course");
+
+  if (!courseId) {
+    console.error("No course ID found in URL.");
+    return;
+  }
+
+  // Fetch course details from Supabase
+  const { data, error } = await supabase
+    .from("course_content")
+    .select("*")
+    .eq("course_id", courseId)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching course content:", error);
+    return;
+  }
+
+  // Debugging logs
+  console.log("Fetched Course Data:", data);
+
+  // Fetch HTML elements
+  const titleElement = document.getElementById("courseTitle");
+  const notesElement = document.getElementById("courseNotes");
+  const articleContainer = document.getElementById("articleContainer");
+  const videoElement = document.getElementById("courseVideo");
+
+  if (titleElement) titleElement.innerText = data.title;
+
+  // **Fix: Show only the LinkedIn article instead of notes**
+  if (articleContainer) {
+    articleContainer.innerHTML = await fetchLinkedInArticle(data.article_link);
+  }
+
+  // **Fix: Ensure video is correctly embedded**
+  if (videoElement) {
+    const videoUrl = fixYouTubeUrl(data.video_url);
+    if (videoUrl) {
+      videoElement.src = videoUrl;
+    } else {
+      console.warn("Invalid video URL:", data.video_url);
     }
+  } else {
+    console.error("courseVideo element not found in DOM.");
+  }
+}
 
-    async function fetchLinkedInArticle(articleUrl) {
-      if (!articleUrl) {
-        return `<p>No LinkedIn article available for this course.</p>`;
-      }
-      return `
-        <p><strong>Read More:</strong> <a href="${articleUrl}" target="_blank">${articleUrl}</a></p>
-        <iframe class="article-embed" src="${articleUrl}" loading="lazy"></iframe>
-      `;
-    }
-
-    async function fetchCourseContent() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const courseId = urlParams.get("course");
-
-      if (!courseId) {
-        document.getElementById("courseTitle").innerText = "Error: No course selected.";
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("course_content")
-        .select("*")
-        .eq("course_id", courseId)
-        .single();
-
-      if (error || !data) {
-        document.getElementById("courseTitle").innerText = "Error loading course.";
-        document.getElementById("courseNotes").innerText = "Unable to fetch course content.";
-        document.getElementById("articleContainer").innerHTML = `<p>Error fetching article.</p>`;
-        return;
-      }
-
-      document.getElementById("courseTitle").innerText = data.title;
-      document.getElementById("courseNotes").innerHTML = `<div>${data.notes}</div>`;
-      document.getElementById("articleContainer").innerHTML = await fetchLinkedInArticle(data.article_link);
-      document.getElementById("courseVideo").src = fixYouTubeUrl(data.video_url);
-    }
-
-    fetchCourseContent();
-  </script>
+fetchCourseContent();
+</script>
 </body>
 </html>
