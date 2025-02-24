@@ -110,6 +110,71 @@
       border: 1px solid #333;
       border-radius: 4px;
     }
+    
+    .linkedin-preview {
+      margin-top: 15px;
+      padding: 20px;
+      background: #222;
+      border-radius: 4px;
+      border: 1px solid #0A66C2;
+    }
+    
+    .linkedin-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      color: #0A66C2;
+    }
+    
+    .linkedin-logo {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      background: #0A66C2;
+      border-radius: 4px;
+      padding: 2px;
+    }
+    
+    .article-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .btn {
+      background: #ff0080;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+    }
+    
+    .btn:hover {
+      background: #ff1493;
+      transform: translateY(-1px);
+    }
+    
+    .btn-linkedin {
+      background: #0A66C2;
+    }
+    
+    .btn-linkedin:hover {
+      background: #0077B5;
+    }
+    
+    .btn-secondary {
+      background: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #444;
+    }
+
     .article-content {
       margin-top: 15px;
       padding: 15px;
@@ -238,7 +303,7 @@
   <script type="module">
     import { supabase } from "../supabase.js";
 
-    // Convert YouTube URL to an embed-friendly format
+    // Keep existing YouTube URL function
     function fixYouTubeUrl(url) {
       if (!url) return null;
       try {
@@ -257,47 +322,94 @@
       }
     }
 
-    // Fetch and process article content
-    async function fetchArticleContent(articleUrl) {
+    // New function to create LinkedIn preview
+    function createLinkedInPreview(articleUrl) {
+      // Extract article title from URL
+      const urlParts = articleUrl.split('/');
+      const titleFromUrl = urlParts[urlParts.length - 1]
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+
+      return `
+        <div class="linkedin-preview">
+          <div class="linkedin-header">
+            <svg class="linkedin-logo" viewBox="0 0 24 24" fill="white">
+              <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+            </svg>
+            <span>LinkedIn Article</span>
+          </div>
+          <h4>${titleFromUrl}</h4>
+          <p>This article is available on LinkedIn. Due to LinkedIn's content protection, we cannot display the full article here.</p>
+          <div class="article-actions">
+            <a href="${articleUrl}" target="_blank" class="btn btn-linkedin">
+              Read on LinkedIn
+            </a>
+            <button onclick="navigator.clipboard.writeText('${articleUrl}')" class="btn btn-secondary">
+              Copy Link
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Update article content
+    function updateArticleContent(articleUrl) {
+      const articleContainer = document.getElementById("articleContainer");
+      
       if (!articleUrl) {
-        return {
-          error: true,
-          message: "No article URL provided for this course."
-        };
+        articleContainer.innerHTML = `
+          <div class="error-message">
+            No article available for this course.
+          </div>
+        `;
+        return;
       }
 
-      try {
-        const response = await fetch(`/api/fetch-article?url=${encodeURIComponent(articleUrl)}`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch article: ${response.statusText}`);
-        }
-        const data = await response.json();
-        return {
-          error: false,
-          content: data.content
-        };
-      } catch (error) {
-        console.error("Error fetching article:", error);
-        return {
-          error: true,
-          message: "Failed to load article content. Please try again later."
-        };
+      if (articleUrl.includes('linkedin.com')) {
+        articleContainer.innerHTML = createLinkedInPreview(articleUrl);
+      } else {
+        articleContainer.innerHTML = `
+          <div class="article-actions">
+            <a href="${articleUrl}" target="_blank" class="btn">
+              Open Article in New Tab
+            </a>
+          </div>
+        `;
       }
     }
 
-    // Initialize UI elements and event listeners
-    function initializeUI() {
-      const toggleButton = document.getElementById('toggleArticle');
-      const articleContainer = document.getElementById('articleContainer');
+    // Keep existing updateUIElements function
+    function updateUIElements(data) {
+      const titleElement = document.getElementById("courseTitle");
+      const notesElement = document.getElementById("courseNotes");
 
-      toggleButton.addEventListener('click', () => {
-        const isHidden = articleContainer.style.display === 'none';
-        articleContainer.style.display = isHidden ? 'block' : 'none';
-        toggleButton.textContent = isHidden ? 'Hide Article Content' : 'Show Article Content';
-      });
+      titleElement.classList.remove("loading");
+      titleElement.innerText = data.title || "Untitled Course";
+
+      if (data.notes) {
+        notesElement.innerHTML = data.notes;
+      } else {
+        notesElement.innerHTML = "<p>No course notes available.</p>";
+      }
     }
 
-    // Main function to fetch and display course content
+    // Keep existing updateVideo function
+    function updateVideo(videoUrl) {
+      const videoElement = document.getElementById("courseVideo");
+      const embedUrl = fixYouTubeUrl(videoUrl);
+      
+      if (embedUrl) {
+        videoElement.src = embedUrl;
+      } else {
+        videoElement.parentElement.innerHTML = `
+          <div class="error-message">
+            Video content unavailable
+          </div>
+        `;
+      }
+    }
+
+    // Modified main function
     async function fetchCourseContent() {
       const urlParams = new URLSearchParams(window.location.search);
       const courseId = urlParams.get("course");
@@ -317,13 +429,12 @@
         if (error) throw error;
         if (!data) throw new Error("No course data found");
 
-        // Update course title and notes
+        // Update UI elements
         updateUIElements(data);
-
-        // Fetch and display article content
-        const articleResult = await fetchArticleContent(data.article_link);
-        updateArticleContent(articleResult);
-
+        
+        // Update article content
+        updateArticleContent(data.article_link);
+        
         // Update video
         updateVideo(data.video_url);
 
@@ -333,53 +444,7 @@
       }
     }
 
-    // Update UI elements with course data
-    function updateUIElements(data) {
-      const titleElement = document.getElementById("courseTitle");
-      const notesElement = document.getElementById("courseNotes");
-
-      titleElement.classList.remove("loading");
-      titleElement.innerText = data.title || "Untitled Course";
-
-      if (data.notes) {
-        notesElement.innerHTML = data.notes;
-      } else {
-        notesElement.innerHTML = "<p>No course notes available.</p>";
-      }
-    }
-
-    // Update article content
-    function updateArticleContent(articleResult) {
-      const articleContainer = document.getElementById("articleContainer");
-      
-      if (articleResult.error) {
-        articleContainer.innerHTML = `
-          <div class="error-message">
-            ${articleResult.message}
-          </div>
-        `;
-      } else {
-        articleContainer.innerHTML = articleResult.content;
-      }
-    }
-
-    // Update video content
-    function updateVideo(videoUrl) {
-      const videoElement = document.getElementById("courseVideo");
-      const embedUrl = fixYouTubeUrl(videoUrl);
-      
-      if (embedUrl) {
-        videoElement.src = embedUrl;
-      } else {
-        videoElement.parentElement.innerHTML = `
-          <div class="error-message">
-            Video content unavailable
-          </div>
-        `;
-      }
-    }
-
-    // Show error message
+    // Keep existing showError function
     function showError(message) {
       const titleElement = document.getElementById("courseTitle");
       const notesElement = document.getElementById("courseNotes");
@@ -395,10 +460,7 @@
     }
 
     // Initialize everything
-    document.addEventListener('DOMContentLoaded', () => {
-      initializeUI();
-      fetchCourseContent();
-    });
+    document.addEventListener('DOMContentLoaded', fetchCourseContent);
   </script>
 </body>
 </html>
