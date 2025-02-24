@@ -18,20 +18,25 @@
       overflow-x: hidden;
     }
     a {
-      color: #fff;
+      color: #ff0080;
       text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    a:hover {
+      color: #ff1493;
     }
 
     /* Header */
     header {
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       padding: 5px 20px;
       position: fixed;
       top: 0;
       width: 100%;
       height: 50px;
       z-index: 999;
-      border-bottom: 1px solid #222;
+      border-bottom: 1px solid #ff0080;
+      backdrop-filter: blur(10px);
     }
     header nav {
       max-width: 1200px;
@@ -45,6 +50,7 @@
       font-size: 1.4rem;
       font-weight: bold;
       color: #ff0080;
+      text-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
     }
     header ul {
       display: flex;
@@ -67,49 +73,87 @@
     .notes-section {
       flex: 1;
       background: #1a1a1a;
-      border-right: 1px solid #222;
+      border-right: 1px solid #ff0080;
       padding: 20px;
       max-width: 600px;
       max-height: calc(100vh - 50px);
       overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #ff0080 #1a1a1a;
     }
-    /* Headings in notes */
-    .notes-section h1,
+    .notes-section::-webkit-scrollbar {
+      width: 8px;
+    }
+    .notes-section::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+    .notes-section::-webkit-scrollbar-thumb {
+      background: #ff0080;
+      border-radius: 4px;
+    }
     .notes-section h2,
-    .notes-section h3,
-    .notes-section h4,
-    .notes-section h5,
-    .notes-section h6 {
+    .notes-section h3 {
       color: #ff0080;
       margin: 16px 0 8px;
+      text-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
     }
-    /* Paragraphs & Lists */
-    .notes-section p,
-    .notes-section ul,
-    .notes-section ol {
+    .notes-section p {
       margin-bottom: 15px;
       line-height: 1.6;
     }
-    .notes-section li {
-      margin-left: 20px;
-      margin-bottom: 8px;
-    }
-    /* Code Blocks */
-    .notes-section pre {
-      background: #2b2b2b;
-      color: #e2e2e2;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 15px;
-      overflow-x: auto;
-      line-height: 1.4;
-    }
-    .notes-section code {
-      background: #2b2b2b;
-      color: #e2e2e2;
-      padding: 3px 5px;
+
+    /* Article Viewer */
+    .article-section {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #333;
       border-radius: 4px;
-      font-family: 'Courier New', monospace;
+    }
+    .article-content {
+      margin-top: 15px;
+      padding: 15px;
+      background: #222;
+      border-radius: 4px;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+    .article-toggle {
+      background: #ff0080;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+    }
+    .article-toggle:hover {
+      background: #ff1493;
+      transform: translateY(-1px);
+    }
+
+    /* Loading States */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #ff0080;
+    }
+    .loading::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ff0080;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* Video Section */
@@ -130,6 +174,8 @@
       padding-bottom: 56.25%;
       height: 0;
       overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(255, 0, 128, 0.2);
     }
     .video-wrapper iframe {
       position: absolute;
@@ -138,6 +184,16 @@
       width: 100%;
       height: 100%;
       border: none;
+    }
+
+    /* Error States */
+    .error-message {
+      color: #ff0080;
+      padding: 15px;
+      background: rgba(255, 0, 128, 0.1);
+      border: 1px solid #ff0080;
+      border-radius: 4px;
+      margin: 10px 0;
     }
   </style>
 </head>
@@ -156,8 +212,18 @@
   <div class="player-container">
     <!-- Notes Section -->
     <div class="notes-section">
-      <h2 id="courseTitle">Loading...</h2>
-      <div id="courseNotes">Please wait while we fetch course details.</div>
+      <h2 id="courseTitle" class="loading">Loading course...</h2>
+      <div id="courseNotes">
+        <div class="loading">Loading course content...</div>
+      </div>
+      
+      <div class="article-section">
+        <h3>Course Article</h3>
+        <button id="toggleArticle" class="article-toggle">Show Article Content</button>
+        <div id="articleContainer" class="article-content" style="display: none;">
+          <div class="loading">Loading article...</div>
+        </div>
+      </div>
     </div>
 
     <!-- Video Section -->
@@ -175,86 +241,164 @@
     // Convert YouTube URL to an embed-friendly format
     function fixYouTubeUrl(url) {
       if (!url) return null;
-      if (url.includes("youtube.com/watch?v=")) {
-        let videoId = url.split("watch?v=")[1].split("&")[0];
-        return `https://www.youtube.com/embed/${videoId}`;
+      try {
+        if (url.includes("youtube.com/watch?v=")) {
+          let videoId = url.split("watch?v=")[1].split("&")[0];
+          return `https://www.youtube.com/embed/${videoId}`;
+        }
+        if (url.includes("youtu.be/")) {
+          const videoId = url.split("youtu.be/")[1];
+          return `https://www.youtube.com/embed/${videoId}`;
+        }
+        return url;
+      } catch (error) {
+        console.error("Error processing YouTube URL:", error);
+        return null;
       }
-      if (url.includes("youtu.be/")) {
-        const videoId = url.split("youtu.be/")[1];
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-      return url;
     }
-    
-    // Fetch LinkedIn Article and handle errors
-    async function fetchLinkedInArticle(articleUrl) {
+
+    // Fetch and process article content
+    async function fetchArticleContent(articleUrl) {
       if (!articleUrl) {
-        return `<p style="color: red;">No LinkedIn article found for this course.</p>`;
+        return {
+          error: true,
+          message: "No article URL provided for this course."
+        };
       }
-    
-      // Debugging: Log the article URL
-      console.log("Fetched LinkedIn Article URL:", articleUrl);
-    
-      return `
-        <p><strong>Read the full article:</strong> <a href="${articleUrl}" target="_blank">${articleUrl}</a></p>
-        <iframe class="article-embed" src="${articleUrl}" loading="lazy" width="100%" height="400px" style="border: 1px solid #fff;"></iframe>
-      `;
+
+      try {
+        const response = await fetch(`/api/fetch-article?url=${encodeURIComponent(articleUrl)}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch article: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return {
+          error: false,
+          content: data.content
+        };
+      } catch (error) {
+        console.error("Error fetching article:", error);
+        return {
+          error: true,
+          message: "Failed to load article content. Please try again later."
+        };
+      }
     }
-    
-    // Fetch Course Content from Supabase
+
+    // Initialize UI elements and event listeners
+    function initializeUI() {
+      const toggleButton = document.getElementById('toggleArticle');
+      const articleContainer = document.getElementById('articleContainer');
+
+      toggleButton.addEventListener('click', () => {
+        const isHidden = articleContainer.style.display === 'none';
+        articleContainer.style.display = isHidden ? 'block' : 'none';
+        toggleButton.textContent = isHidden ? 'Hide Article Content' : 'Show Article Content';
+      });
+    }
+
+    // Main function to fetch and display course content
     async function fetchCourseContent() {
       const urlParams = new URLSearchParams(window.location.search);
       const courseId = urlParams.get("course");
-    
+
       if (!courseId) {
-        console.error("No course ID found in URL.");
+        showError("No course ID provided in the URL.");
         return;
       }
-    
-      // Fetch course details from Supabase
-      const { data, error } = await supabase
-        .from("course_content")
-        .select("*")
-        .eq("course_id", courseId)
-        .single();
-    
-      if (error || !data) {
-        console.error("Error fetching course content:", error);
-        return;
-      }
-    
-      // Debugging: Log all fetched data
-      console.log("Fetched Course Data:", data);
-    
-      // Get HTML elements
-      const titleElement = document.getElementById("courseTitle");
-      const articleContainer = document.getElementById("articleContainer");
-      const videoElement = document.getElementById("courseVideo");
-    
-      if (titleElement) titleElement.innerText = data.title;
-    
-      // **Fix: Ensure the article is properly displayed**
-      if (articleContainer) {
-        articleContainer.innerHTML = await fetchLinkedInArticle(data.article_link);
-      } else {
-        console.error("articleContainer not found in DOM.");
-      }
-    
-      // **Fix: Ensure video is correctly embedded**
-      if (videoElement) {
-        const videoUrl = fixYouTubeUrl(data.video_url);
-        if (videoUrl) {
-          videoElement.src = videoUrl;
-        } else {
-          console.warn("Invalid video URL:", data.video_url);
-        }
-      } else {
-        console.error("courseVideo element not found in DOM.");
+
+      try {
+        const { data, error } = await supabase
+          .from("course_content")
+          .select("*")
+          .eq("course_id", courseId)
+          .single();
+
+        if (error) throw error;
+        if (!data) throw new Error("No course data found");
+
+        // Update course title and notes
+        updateUIElements(data);
+
+        // Fetch and display article content
+        const articleResult = await fetchArticleContent(data.article_link);
+        updateArticleContent(articleResult);
+
+        // Update video
+        updateVideo(data.video_url);
+
+      } catch (error) {
+        console.error("Error loading course:", error);
+        showError("Failed to load course content. Please try again later.");
       }
     }
-    
-    fetchCourseContent();
-    
-</script>
+
+    // Update UI elements with course data
+    function updateUIElements(data) {
+      const titleElement = document.getElementById("courseTitle");
+      const notesElement = document.getElementById("courseNotes");
+
+      titleElement.classList.remove("loading");
+      titleElement.innerText = data.title || "Untitled Course";
+
+      if (data.notes) {
+        notesElement.innerHTML = data.notes;
+      } else {
+        notesElement.innerHTML = "<p>No course notes available.</p>";
+      }
+    }
+
+    // Update article content
+    function updateArticleContent(articleResult) {
+      const articleContainer = document.getElementById("articleContainer");
+      
+      if (articleResult.error) {
+        articleContainer.innerHTML = `
+          <div class="error-message">
+            ${articleResult.message}
+          </div>
+        `;
+      } else {
+        articleContainer.innerHTML = articleResult.content;
+      }
+    }
+
+    // Update video content
+    function updateVideo(videoUrl) {
+      const videoElement = document.getElementById("courseVideo");
+      const embedUrl = fixYouTubeUrl(videoUrl);
+      
+      if (embedUrl) {
+        videoElement.src = embedUrl;
+      } else {
+        videoElement.parentElement.innerHTML = `
+          <div class="error-message">
+            Video content unavailable
+          </div>
+        `;
+      }
+    }
+
+    // Show error message
+    function showError(message) {
+      const titleElement = document.getElementById("courseTitle");
+      const notesElement = document.getElementById("courseNotes");
+      
+      titleElement.classList.remove("loading");
+      titleElement.innerText = "Error";
+      
+      notesElement.innerHTML = `
+        <div class="error-message">
+          ${message}
+        </div>
+      `;
+    }
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeUI();
+      fetchCourseContent();
+    });
+  </script>
 </body>
 </html>
